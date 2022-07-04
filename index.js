@@ -3,7 +3,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 
-const Contact = require("./models/contact");
+const Person = require("./models/person");
 
 const requestLogger = (request, response, next) => {
   console.log("Method:", request.method);
@@ -26,16 +26,16 @@ app.get("/", (req, res) => {
 });
 
 app.get("/api/persons", (request, response) => {
-  Contact.find({}).then((contacts) => {
-    response.json(contacts);
+  Person.find({}).then((persons) => {
+    response.json(persons);
   });
 });
 
 app.get("/api/persons/:id", (request, response, next) => {
-  Contact.findById(request.params.id)
-    .then((contact) => {
-      if (contact) {
-        response.json(contact);
+  Person.findById(request.params.id)
+    .then((person) => {
+      if (person) {
+        response.json(person);
       } else {
         response.status(404).end();
       }
@@ -44,20 +44,14 @@ app.get("/api/persons/:id", (request, response, next) => {
 });
 
 app.delete("/api/persons/:id", (request, response, next) => {
-  Contact.findByIdAndRemove(request.params.id)
+  Person.findByIdAndRemove(request.params.id)
     .then((result) => {
       response.status(204).end();
     })
     .catch((error) => next(error));
 });
 
-function getRandomArbitrary(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min) + min);
-}
-
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
   const body = request.body;
 
   console.log(body);
@@ -66,25 +60,32 @@ app.post("/api/persons", (request, response) => {
     return response.status(400).json({ error: "name missing" });
   }
 
-  const contact = new Contact({
+  const person = new Person({
     name: body.name,
     number: body.number,
   });
 
-  contact.save().then((savedContact) => {
-    response.json(savedContact);
-  });
+  person
+    .save()
+    .then((savedPerson) => {
+      response.json(savedPerson);
+    })
+    .catch((error) => next(error));
 });
 
 app.put("/api/persons/:id", (request, response, next) => {
-  const body = request.body;
+  const { name, number } = request.body;
 
-  const contact = {
-    name: body.name,
-    number: body.number,
+  const person = {
+    name,
+    number,
   };
 
-  Contact.findByIdAndUpdate(request.params.id, contact, { new: true })
+  Person.findByIdAndUpdate(request.params.id, person, {
+    new: true,
+    runValidators: true,
+    context: "query",
+  })
     .then((updatedNote) => {
       response.json(updatedNote);
     })
@@ -102,6 +103,8 @@ const errorHandler = (error, request, response, next) => {
 
   if (error.name === "CastError") {
     return response.status(400).send({ error: "malformatted id" });
+  } else if (error.name === "ValidationError") {
+    return response.status(400).json({ error: error.message });
   }
 
   next(error);
