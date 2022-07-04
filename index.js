@@ -44,14 +44,15 @@ function getRandomArbitrary(min, max) {
 app.post("/api/persons", (request, response) => {
   const body = request.body;
 
-  if (body.content === undefined) {
-    return response.status(400).json({ error: "content missing" });
+  console.log(body);
+
+  if (body.name === undefined) {
+    return response.status(400).json({ error: "name missing" });
   }
 
   const contact = new Contact({
-    content: body.content,
-    important: body.important || false,
-    date: new Date(),
+    name: body.name,
+    number: body.number,
   });
 
   contact.save().then((savedContact) => {
