@@ -3,11 +3,20 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const mongoose = require("mongoose");
 
 const Contact = require("./models/contact");
 
 app.use(express.json());
+
+const requestLogger = (request, response, next) => {
+  console.log("Method:", request.method);
+  console.log("Path:  ", request.path);
+  console.log("Body:  ", request.body);
+  console.log("---");
+  next();
+};
+
+app.use(requestLogger);
 
 app.use(cors());
 
@@ -23,16 +32,24 @@ app.get("/api/persons", (request, response) => {
   });
 });
 
-app.get("/api/persons/:id", (request, response) => {
-  Contact.findById(request.params.id).then((contact) => {
-    response.json(contact);
-  });
+app.get("/api/persons/:id", (request, response, next) => {
+  Contact.findById(request.params.id)
+    .then((contact) => {
+      if (contact) {
+        response.json(contact);
+      } else {
+        response.status(404).end();
+      }
+    })
+    .catch((error) => next(error));
 });
 
-app.delete("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  persons = persons.filter((person) => person.id !== id);
-  response.status(204).end();
+app.delete("/api/persons/:id", (request, response, next) => {
+  Contact.findByIdAndRemove(request.params.id)
+    .then((result) => {
+      response.status(204).end();
+    })
+    .catch((error) => next(error));
 });
 
 function getRandomArbitrary(min, max) {
@@ -65,6 +82,18 @@ const unknownEndpoint = (request, response) => {
 };
 
 app.use(unknownEndpoint);
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  }
+
+  next(error);
+};
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 
