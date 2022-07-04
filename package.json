@@ -1,0 +1,28 @@
+{
+  "name": "phonebook-be",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js",
+    "start": "node index.js",
+    "build:ui": "rm -rf build && cd ../../full-stack-open/Full Stack open fe 2022/part2/phonebook && npm run build && cp -r build cd ../../../../full-stack-open-be/phonebook-backend",
+    "deploy": "git push heroku master",
+    "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && npm run deploy",
+    "logs:prod": "heroku logs --tail"
+  },
+  "author": "Matteo Meneguzzi",
+  "license": "MIT",
+  "dependencies": {
+    "@heroku/buildpack-registry": "1.0.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "mongoose": "^6.4.1",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.16"
+  }
+}
