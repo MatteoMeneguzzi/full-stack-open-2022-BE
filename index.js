@@ -54,8 +54,6 @@ app.delete("/api/persons/:id", (request, response, next) => {
 app.post("/api/persons", (request, response, next) => {
   const body = request.body;
 
-  console.log(body);
-
   if (body.name === undefined) {
     return response.status(400).json({ error: "name missing" });
   }
@@ -81,6 +79,12 @@ app.put("/api/persons/:id", (request, response, next) => {
     number,
   };
 
+  console.log(request.params.id === "---");
+
+  if (!request.params.id) {
+    return response.status(400).end();
+  }
+
   Person.findByIdAndUpdate(request.params.id, person, {
     new: true,
     runValidators: true,
@@ -99,7 +103,7 @@ const unknownEndpoint = (request, response) => {
 app.use(unknownEndpoint);
 
 const errorHandler = (error, request, response, next) => {
-  console.error(error.message);
+  console.log(error.message);
 
   if (error.name === "CastError") {
     return response.status(400).send({ error: "malformatted id" });
